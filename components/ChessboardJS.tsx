@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Chess } from 'chess.js';
+import { Chess, Square } from 'chess.js';
 import { Chessboard } from 'react-chessboard';
 
 interface ChessboardJSProps {
@@ -13,6 +13,8 @@ const ChessboardJS: React.FC<ChessboardJSProps> = ({ game, playerColor, isPlayer
   const [isDragging, setIsDragging] = useState(false);
   const [boardWidth, setBoardWidth] = useState(500); // Increased default size for desktop
   const boardContainerRef = useRef<HTMLDivElement>(null);
+  const [selectedSquare, setSelectedSquare] = useState<Square | null>(null);
+  const [optionSquares, setOptionSquares] = useState<Record<string, { background: string }>>({});
 
   // Handle responsive sizing
   useEffect(() => {
@@ -57,7 +59,50 @@ const ChessboardJS: React.FC<ChessboardJSProps> = ({ game, playerColor, isPlayer
     };
   }, []);
 
-  const handlePieceDrop = (sourceSquare: string, targetSquare: string) => {
+  // Handle square click for click-to-move functionality
+  const handleSquareClick = (square: Square) => {
+    if (!isPlayerTurn) {
+      console.log('Not your turn');
+      return;
+    }
+
+    // If no square is selected yet, check if the clicked square has a piece of the player's color
+    if (!selectedSquare) {
+      const piece = game.get(square);
+      if (piece && piece.color === playerColor.charAt(0)) {
+        setSelectedSquare(square);
+        highlightSelectedSquare(square);
+      }
+    } 
+    // If a square is already selected, try to move the piece
+    else {
+      // If clicking on the same square, deselect it
+      if (square === selectedSquare) {
+        setSelectedSquare(null);
+        setOptionSquares({});
+        return;
+      }
+
+      // Try to make the move
+      const moveResult = handlePieceDrop(selectedSquare, square);
+      
+      // Clear selection regardless of move validity
+      setSelectedSquare(null);
+      setOptionSquares({});
+    }
+  };
+
+  // Highlight only the selected square
+  const highlightSelectedSquare = (square: Square) => {
+    const newOptionSquares: Record<string, { background: string }> = {};
+    
+    // Highlight the selected square
+    newOptionSquares[square] = { background: 'rgba(255, 217, 102, 0.7)' };
+    
+    setOptionSquares(newOptionSquares);
+  };
+
+  const handlePieceDrop = (sourceSquare: Square, targetSquare: Square) => {
     if (!isPlayerTurn) {
       console.log('Not your turn');
       return false;
@@ -97,6 +142,9 @@ const ChessboardJS: React.FC<ChessboardJSProps> = ({ game, playerColor, isPlayer
 
   const handlePieceDragBegin = () => {
     setIsDragging(true);
+    // Clear any selected square when dragging starts
+    setSelectedSquare(null);
+    setOptionSquares({});
   };
 
   const handlePieceDragEnd = () => {
@@ -112,6 +160,7 @@ const ChessboardJS: React.FC<ChessboardJSProps> = ({ game, playerColor, isPlayer
           onPieceDrop={handlePieceDrop}
           onPieceDragBegin={handlePieceDragBegin}
           onPieceDragEnd={handlePieceDragEnd}
+          onSquareClick={handleSquareClick}
           boardOrientation={playerColor === 'w' ? 'white' : 'black'}
           customBoardStyle={{
             borderRadius: '4px',
@@ -120,6 +169,7 @@ const ChessboardJS: React.FC<ChessboardJSProps> = ({ game, playerColor, isPlayer
           }}
           customDarkSquareStyle={{ backgroundColor: '#b58863' }}
           customLightSquareStyle={{ backgroundColor: '#f0d9b5' }}
+          customSquareStyles={optionSquares}
           showBoardNotation={true}
           arePiecesDraggable={isPlayerTurn}
           animationDuration={200}
