@@ -12,6 +12,15 @@ const handle = app.getRequestHandler();
 // Store games in memory
 const games = {};
 
+// Helper function to get the last move from a game's history
+const getLastMoveFromHistory = (game) => {
+  const history = game.history({ verbose: true });
+  return history.length > 0 ? {
+    from: history[history.length - 1].from,
+    to: history[history.length - 1].to
+  } : null;
+};
+
 app.prepare().then(() => {
   const server = createServer((req, res) => {
     const parsedUrl = parse(req.url, true);
@@ -64,12 +73,8 @@ app.prepare().then(() => {
       if (game.players.includes(socket.id)) {
         socket.join(gameId);
         
-        // Get the last move from the game history if available
-        const history = game.game.history({ verbose: true });
-        const lastMove = history.length > 0 ? {
-          from: history[history.length - 1].from,
-          to: history[history.length - 1].to
-        } : null;
+        // Get the last move from the game history
+        const lastMove = getLastMoveFromHistory(game.game);
         
         socket.emit('gameJoined', { 
           gameId,
@@ -89,12 +94,8 @@ app.prepare().then(() => {
       game.players.push(socket.id);
       socket.join(gameId);
       
-      // Get the last move from the game history if available
-      const history = game.game.history({ verbose: true });
-      const lastMove = history.length > 0 ? {
-        from: history[history.length - 1].from,
-        to: history[history.length - 1].to
-      } : null;
+      // Get the last move from the game history
+      const lastMove = getLastMoveFromHistory(game.game);
       
       socket.emit('gameJoined', { 
         gameId,
