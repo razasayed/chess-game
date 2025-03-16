@@ -59,8 +59,13 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children }) => {
     // Socket event listeners
     socket.on('gameCreated', (data: { gameId: string }) => {
       console.log('Game created:', data.gameId);
+      // Reset the game state first
+      setGame(new Chess());
+      setOpponent(false);
+      // Then set the new game ID
       setGameId(data.gameId);
       setPlayerColor('w');
+      setGameStatus('Waiting for opponent...');
     });
 
     socket.on('gameJoined', () => {
@@ -92,11 +97,13 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children }) => {
       setGameStatus('Opponent disconnected. Game ended.');
     });
 
-    socket.on('gameReset', () => {
-      console.log('Game has been reset');
-      setGame(new Chess());
-      setOpponent(false);
-      setGameStatus('Waiting for opponent...');
+    socket.on('gameReset', (data: { gameId: string }) => {
+      console.log('Game has been reset by server:', data?.gameId);
+      // Only reset if this is our current game
+      if (gameId === data?.gameId) {
+        console.log('Resetting local game state');
+        // No need to reset the game state here as it will be done when joining the new game
+      }
     });
 
     return () => {
@@ -108,7 +115,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children }) => {
       socket.off('opponentDisconnected');
       socket.off('gameReset');
     };
-  }, [socket]);
+  }, [socket, gameId]);
 
   const updateGameStatus = (currentGame: Chess) => {
     if (currentGame.isGameOver()) {
@@ -191,15 +198,22 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children }) => {
     
     console.log('Resetting game...');
     
-    // Notify server to reset the game
-    socket.emit('resetGame', { gameId });
+    // Store the current gameId before clearing it
+    const currentGameId = gameId;
     
-    // Reset local state
-    const newGame = new Chess();
-    setGame(newGame);
-    setGameId(null);
-    setOpponent(false);
-    setGameStatus('Waiting for opponent...');
+    // First create a new game, then reset the old one
+    // This ensures we have a new game ID before removing the old one
+    createGame()
+      .then(newGameId => {
+        console.log('New game created after reset:', newGameId);
+        
+        // Now that we have a new game, reset the old one
+        socket.emit('resetGame', { gameId: currentGameId });
+      })
+      .catch(error => {
+        console.error('Error creating new game after reset:', error);
+        setGameStatus('Error creating new game. Please try again.');
+      });
   };
 
   // Determine if it's the player's turn

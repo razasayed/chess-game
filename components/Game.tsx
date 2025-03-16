@@ -34,8 +34,15 @@ const Game: React.FC = () => {
     if (gameId) {
       const url = `${window.location.origin}?gameId=${gameId}`;
       setShareUrl(url);
+      
+      // Update the URL when gameId changes
+      router.push(`/?gameId=${gameId}`, undefined, { shallow: true });
+    } else if (router.query.gameId && !gameId) {
+      // If gameId is null but URL has gameId, clear the URL
+      console.log('Clearing gameId from URL');
+      router.replace('/', undefined, { shallow: true });
     }
-  }, [gameId]);
+  }, [gameId, router]);
 
   const handleCreateGame = async () => {
     try {
@@ -52,6 +59,12 @@ const Game: React.FC = () => {
     navigator.clipboard.writeText(shareUrl);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleResetGame = () => {
+    // Don't modify the URL here, let the gameId change trigger the URL update
+    console.log('Handling reset game...');
+    resetGame();
   };
 
   return (
@@ -77,7 +90,7 @@ const Game: React.FC = () => {
         )}
         
         {gameId && opponent && game.isGameOver() && (
-          <button className="button" onClick={resetGame}>
+          <button className="button" onClick={handleResetGame}>
             New Game
           </button>
         )}

@@ -116,18 +116,19 @@ app.prepare().then(() => {
       const game = games[gameId];
       
       if (!game) {
-        console.log(`Game not found: ${gameId}`);
-        socket.emit('gameError', { message: 'Game not found' });
+        console.log(`Game not found for reset: ${gameId}`);
+        // Don't send an error, just log it
         return;
       }
 
+      // Notify all players in the room before removing the game
+      io.to(gameId).emit('gameReset', { gameId });
+      
       // Remove the game
       delete games[gameId];
       
-      // Notify all players in the room
-      io.to(gameId).emit('gameReset');
-      
       console.log(`Game ${gameId} has been reset`);
+      console.log('Active games after reset:', Object.keys(games));
     });
 
     // Handle disconnection
