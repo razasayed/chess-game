@@ -115,7 +115,8 @@ const ChessboardJS: React.FC<ChessboardJSProps> = ({ game, playerColor, isPlayer
           boardOrientation={playerColor === 'w' ? 'white' : 'black'}
           customBoardStyle={{
             borderRadius: '4px',
-            boxShadow: '0 5px 15px rgba(0, 0, 0, 0.5)'
+            boxShadow: '0 5px 15px rgba(0, 0, 0, 0.5)',
+            opacity: isPlayerTurn ? '1' : '0.9'
           }}
           customDarkSquareStyle={{ backgroundColor: '#b58863' }}
           customLightSquareStyle={{ backgroundColor: '#f0d9b5' }}

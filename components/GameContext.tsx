@@ -27,7 +27,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children }) => {
   const [gameId, setGameId] = useState<string | null>(null);
   const [playerColor, setPlayerColor] = useState<'w' | 'b'>('w');
   const [opponent, setOpponent] = useState(false);
-  const [gameStatus, setGameStatus] = useState('Waiting for opponent...');
+  const [gameStatus, setGameStatus] = useState('');
 
   useEffect(() => {
     // Initialize socket connection
@@ -123,7 +123,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children }) => {
     if (currentGame.isGameOver()) {
       if (currentGame.isCheckmate()) {
         const winner = currentGame.turn() === 'w' ? 'Black' : 'White';
-        setGameStatus(`Checkmate! ${winner} wins!`);
+        setGameStatus(`Checkmate! ${winner} wins! 🎉`);
       } else if (currentGame.isDraw()) {
         let reason = 'Draw';
         if (currentGame.isStalemate()) {
@@ -174,6 +174,11 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children }) => {
       return;
     }
 
+    if (!opponent) {
+      console.error('Cannot make move: waiting for opponent to join');
+      return;
+    }
+
     try {
       console.log('Making move:', move);
       const newGame = new Chess(game.fen());
@@ -219,7 +224,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children }) => {
   };
 
   // Determine if it's the player's turn
-  const isPlayerTurn = game.turn() === playerColor;
+  const isPlayerTurn = game.turn() === playerColor && opponent;
 
   const value = {
     game,

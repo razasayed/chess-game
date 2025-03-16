@@ -101,14 +101,16 @@ const Game: React.FC = () => {
         <ChessboardJS
           game={game}
           playerColor={playerColor}
-          isPlayerTurn={isPlayerTurn}
+          isPlayerTurn={gameId ? (isPlayerTurn && opponent !== null) : false}
           onMove={makeMove}
         />
         
         {gameId && (
           <div className="player-info">
             <p>You are playing as {playerColor === 'w' ? 'White' : 'Black'}</p>
-            {!opponent && <p>Waiting for opponent to join...</p>}
+            {!opponent && playerColor === 'w' && (
+              <p className="waiting-message">Waiting for opponent to join... Pieces will be enabled when opponent joins.</p>
+            )}
           </div>
         )}
       </div>
