@@ -3,7 +3,7 @@ const { parse } = require('url');
 const next = require('next');
 const { Server } = require('socket.io');
 const { Chess } = require('chess.js');
-const { nanoid } = require('nanoid');
+const { nanoid } = require('nanoid/non-secure');
 
 const dev = process.env.NODE_ENV !== 'production';
 const app = next({ dev });
