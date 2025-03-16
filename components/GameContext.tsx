@@ -33,7 +33,9 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children }) => {
     // Initialize socket connection
     console.log('Connecting to socket...');
     const socketInstance = io({
-      transports: ['websocket', 'polling']
+      transports: ['websocket', 'polling'],
+      // Use the current host in production, localhost in development
+      ...(process.env.NODE_ENV === 'production' ? {} : { path: '/socket.io' })
     });
     
     socketInstance.on('connect', () => {
