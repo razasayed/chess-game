@@ -17,10 +17,6 @@ const Home: React.FC = () => {
           <Game />
         </GameProvider>
       </main>
-
-      <footer>
-        <p>A simple two-player chess game</p>
-      </footer>
     </div>
   );
 };

@@ -69,39 +69,41 @@ const Game: React.FC = () => {
 
   return (
     <div className="game-container">
-      <div className="game-info">
-        <h1>Chess Game</h1>
-        <div className="game-status">{gameStatus}</div>
-        
-        {!gameId && (
-          <button className="button" onClick={handleCreateGame}>
-            Create New Game
-          </button>
-        )}
-        
-        {gameId && !opponent && (
-          <div>
-            <p>Share this link with your opponent:</p>
-            <div className="share-link">{shareUrl}</div>
-            <button className="button" onClick={handleCopyLink}>
-              {copied ? 'Copied!' : 'Copy Link'}
+      <div>
+        <div className="game-info">
+          <h1>Chess Game</h1>
+          <div className="game-status">{gameStatus}</div>
+          
+          {!gameId && (
+            <button className="button" onClick={handleCreateGame}>
+              Create New Game
             </button>
-          </div>
-        )}
+          )}
+          
+          {gameId && !opponent && (
+            <div>
+              <p>Share this link with your opponent:</p>
+              <div className="share-link">{shareUrl}</div>
+              <button className="button" onClick={handleCopyLink}>
+                {copied ? 'Copied!' : 'Copy Link'}
+              </button>
+            </div>
+          )}
+          
+          {gameId && opponent && game.isGameOver() && (
+            <button className="button" onClick={handleResetGame}>
+              New Game
+            </button>
+          )}
+        </div>
         
-        {gameId && opponent && game.isGameOver() && (
-          <button className="button" onClick={handleResetGame}>
-            New Game
-          </button>
-        )}
+        <ChessboardJS
+          game={game}
+          playerColor={playerColor}
+          isPlayerTurn={isPlayerTurn}
+          onMove={makeMove}
+        />
       </div>
-      
-      <ChessboardJS
-        game={game}
-        playerColor={playerColor}
-        isPlayerTurn={isPlayerTurn}
-        onMove={makeMove}
-      />
       
       {gameId && (
         <div className="player-info">
@@ -109,6 +111,10 @@ const Game: React.FC = () => {
           {!opponent && <p>Waiting for opponent to join...</p>}
         </div>
       )}
+      
+      <footer>
+        <p>A simple two-player chess game</p>
+      </footer>
     </div>
   );
 };

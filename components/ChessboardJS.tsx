@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Chess } from 'chess.js';
 import { Chessboard } from 'react-chessboard';
 
@@ -11,6 +11,47 @@ interface ChessboardJSProps {
 
 const ChessboardJS: React.FC<ChessboardJSProps> = ({ game, playerColor, isPlayerTurn, onMove }) => {
   const [isDragging, setIsDragging] = useState(false);
+  const [boardWidth, setBoardWidth] = useState(500); // Increased default size for desktop
+  const boardContainerRef = useRef<HTMLDivElement>(null);
+
+  // Handle responsive sizing
+  useEffect(() => {
+    const handleResize = () => {
+      if (boardContainerRef.current) {
+        const containerWidth = boardContainerRef.current.offsetWidth;
+        const windowWidth = window.innerWidth;
+        const windowHeight = window.innerHeight;
+        
+        // For mobile (under 768px), make board 90% of container width
+        if (windowWidth < 768) {
+          setBoardWidth(Math.min(containerWidth * 0.9, 320));
+        } 
+        // For tablets (768px - 1024px)
+        else if (windowWidth < 1024) {
+          setBoardWidth(Math.min(containerWidth * 0.7, 450));
+        } 
+        // For desktop (1024px and above)
+        else {
+          // Make sure the board doesn't take up too much vertical space
+          const maxHeight = windowHeight * 0.65; // Max 65% of viewport height
+          const idealWidth = Math.min(containerWidth * 0.7, 550); // Increased size for desktop
+          const finalWidth = Math.min(idealWidth, maxHeight);
+          setBoardWidth(finalWidth);
+        }
+      }
+    };
+
+    // Initial sizing
+    handleResize();
+
+    // Add event listener for window resize
+    window.addEventListener('resize', handleResize);
+
+    // Clean up
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
 
   const handlePieceDrop = (sourceSquare: string, targetSquare: string) => {
     if (!isPlayerTurn) {
@@ -59,8 +100,8 @@ const ChessboardJS: React.FC<ChessboardJSProps> = ({ game, playerColor, isPlayer
   };
 
   return (
-    <div className="chessboard-container">
-      <div style={{ width: '400px', margin: '0 auto' }}>
+    <div className="chessboard-container" ref={boardContainerRef}>
+      <div style={{ width: `${boardWidth}px`, maxWidth: '100%', margin: '0 auto' }}>
         <Chessboard
           id="chess-board"
           position={game.fen()}
