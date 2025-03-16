@@ -22,19 +22,23 @@ const ChessboardJS: React.FC<ChessboardJSProps> = ({ game, playerColor, isPlayer
         const windowWidth = window.innerWidth;
         const windowHeight = window.innerHeight;
         
-        // For mobile (under 768px), make board 90% of container width
-        if (windowWidth < 768) {
-          setBoardWidth(Math.min(containerWidth * 0.9, 320));
+        // For mobile (under 480px)
+        if (windowWidth < 480) {
+          setBoardWidth(Math.min(containerWidth * 0.95, 320));
+        } 
+        // For small tablets (480px - 768px)
+        else if (windowWidth < 768) {
+          setBoardWidth(Math.min(containerWidth * 0.9, 450));
         } 
         // For tablets (768px - 1024px)
         else if (windowWidth < 1024) {
-          setBoardWidth(Math.min(containerWidth * 0.7, 450));
+          setBoardWidth(Math.min(containerWidth * 0.8, 500));
         } 
         // For desktop (1024px and above)
         else {
           // Make sure the board doesn't take up too much vertical space
-          const maxHeight = windowHeight * 0.65; // Max 65% of viewport height
-          const idealWidth = Math.min(containerWidth * 0.7, 550); // Increased size for desktop
+          const maxHeight = windowHeight * 0.7; // Max 70% of viewport height
+          const idealWidth = Math.min(containerWidth, 600); // Increased size for desktop
           const finalWidth = Math.min(idealWidth, maxHeight);
           setBoardWidth(finalWidth);
         }

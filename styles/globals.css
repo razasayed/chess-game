@@ -57,13 +57,44 @@ a {
   max-width: 1200px;
 }
 
+.game-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  min-height: 90vh;
+  justify-content: flex-start;
+  padding-bottom: 20px;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.game-header {
+  margin-bottom: 20px;
+  text-align: center;
+  width: 100%;
+}
+
+.game-subtitle {
+  color: #666;
+  margin-bottom: 15px;
+  font-size: 16px;
+}
+
+.game-board-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
 .chessboard-container {
-  margin: 10px 0;
+  margin: 0 0 15px 0;
   display: flex;
   justify-content: center;
   align-items: center;
   width: 100%;
-  padding: 0 10px;
+  max-width: 600px;
 }
 
 .game-info {
@@ -76,13 +107,18 @@ a {
 }
 
 .game-status {
-  margin-bottom: 10px;
+  margin-bottom: 15px;
   font-weight: bold;
   font-size: 18px;
 }
 
+.share-section {
+  margin-top: 10px;
+}
+
 .share-link {
-  margin-top: 15px;
+  margin-top: 10px;
+  margin-bottom: 10px;
   padding: 10px;
   background-color: #f5f5f5;
   border-radius: 5px;
@@ -113,18 +149,8 @@ a {
   cursor: not-allowed;
 }
 
-.game-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: 100%;
-  min-height: 90vh;
-  justify-content: space-between;
-  padding-bottom: 20px;
-}
-
 .player-info {
-  margin-top: 15px;
+  margin-top: 10px;
   text-align: center;
   font-size: 16px;
   width: 100%;
@@ -133,9 +159,9 @@ a {
 }
 
 h1 {
-  margin-bottom: 10px;
+  margin-bottom: 5px;
   color: #333;
-  font-size: 26px;
+  font-size: 28px;
 }
 
 footer {
@@ -147,13 +173,27 @@ footer {
 }
 
 /* Media Queries for Responsive Design */
+@media (min-width: 769px) {
+  .chessboard-container {
+    max-width: 600px;
+  }
+}
+
 @media (max-width: 768px) {
   .main {
     padding: 0.5rem 0;
   }
   
+  .game-container {
+    max-width: 100%;
+  }
+  
   h1 {
-    font-size: 22px;
+    font-size: 24px;
+  }
+  
+  .game-subtitle {
+    font-size: 14px;
   }
   
   .game-status {
@@ -172,6 +212,10 @@ footer {
   .player-info {
     font-size: 14px;
   }
+  
+  .chessboard-container {
+    max-width: 450px;
+  }
 }
 
 @media (max-width: 480px) {
@@ -181,5 +225,9 @@ footer {
   
   .game-status {
     font-size: 14px;
+  }
+  
+  .chessboard-container {
+    max-width: 320px;
   }
 } 
