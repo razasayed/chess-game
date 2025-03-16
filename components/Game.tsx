@@ -16,6 +16,7 @@ const Game: React.FC = () => {
     isPlayerTurn,
     gameStatus,
     opponent,
+    lastMove,
     createGame,
     joinGame,
     makeMove,
@@ -103,6 +104,7 @@ const Game: React.FC = () => {
           playerColor={playerColor}
           isPlayerTurn={gameId ? (isPlayerTurn && opponent !== null) : false}
           onMove={makeMove}
+          lastMove={lastMove}
         />
         
         {gameId && (

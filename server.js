@@ -63,7 +63,19 @@ app.prepare().then(() => {
       // If player is already in the game, just rejoin
       if (game.players.includes(socket.id)) {
         socket.join(gameId);
-        socket.emit('gameJoined', { gameId });
+        
+        // Get the last move from the game history if available
+        const history = game.game.history({ verbose: true });
+        const lastMove = history.length > 0 ? {
+          from: history[history.length - 1].from,
+          to: history[history.length - 1].to
+        } : null;
+        
+        socket.emit('gameJoined', { 
+          gameId,
+          fen: game.game.fen(),
+          lastMove
+        });
         console.log(`Player ${socket.id} rejoined game: ${gameId}`);
         return;
       }
@@ -77,7 +89,18 @@ app.prepare().then(() => {
       game.players.push(socket.id);
       socket.join(gameId);
       
-      socket.emit('gameJoined', { gameId });
+      // Get the last move from the game history if available
+      const history = game.game.history({ verbose: true });
+      const lastMove = history.length > 0 ? {
+        from: history[history.length - 1].from,
+        to: history[history.length - 1].to
+      } : null;
+      
+      socket.emit('gameJoined', { 
+        gameId,
+        fen: game.game.fen(),
+        lastMove
+      });
       socket.to(gameId).emit('opponentJoined', { gameId });
       
       console.log(`Player ${socket.id} joined game: ${gameId}`);
@@ -85,7 +108,7 @@ app.prepare().then(() => {
 
     // Make a move
     socket.on('makeMove', ({ gameId, move, fen }) => {
-      console.log(`Move in game ${gameId}: ${move.from} to ${move.to}`);
+      console.log(`Received move for game ${gameId}:`, move);
       
       const game = games[gameId];
       
@@ -94,13 +117,19 @@ app.prepare().then(() => {
         socket.emit('gameError', { message: 'Game not found' });
         return;
       }
-
+      
       try {
         // Update the game state
         game.game = new Chess(fen);
         
         // Broadcast the move to all players in the game
-        io.to(gameId).emit('moveMade', { fen });
+        io.to(gameId).emit('moveMade', { 
+          fen,
+          lastMove: {
+            from: move.from,
+            to: move.to
+          }
+        });
         
         console.log(`Move made in game ${gameId}: ${move.from} to ${move.to}`);
       } catch (error) {

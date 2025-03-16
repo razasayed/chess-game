@@ -7,14 +7,16 @@ interface ChessboardJSProps {
   playerColor: 'w' | 'b';
   isPlayerTurn: boolean;
   onMove: (move: { from: string; to: string; promotion?: string }) => void;
+  lastMove: { from: string; to: string } | null;
 }
 
-const ChessboardJS: React.FC<ChessboardJSProps> = ({ game, playerColor, isPlayerTurn, onMove }) => {
+const ChessboardJS: React.FC<ChessboardJSProps> = ({ game, playerColor, isPlayerTurn, onMove, lastMove: externalLastMove }) => {
   const [isDragging, setIsDragging] = useState(false);
   const [boardWidth, setBoardWidth] = useState(500); // Increased default size for desktop
   const boardContainerRef = useRef<HTMLDivElement>(null);
   const [selectedSquare, setSelectedSquare] = useState<Square | null>(null);
   const [optionSquares, setOptionSquares] = useState<Record<string, { background: string }>>({});
+  const [internalLastMove, setInternalLastMove] = useState<{ from: Square; to: Square } | null>(null);
 
   // Handle responsive sizing
   useEffect(() => {
@@ -59,6 +61,16 @@ const ChessboardJS: React.FC<ChessboardJSProps> = ({ game, playerColor, isPlayer
     };
   }, []);
 
+  // Update highlighted squares when external lastMove changes
+  useEffect(() => {
+    if (externalLastMove) {
+      const fromSquare = externalLastMove.from as Square;
+      const toSquare = externalLastMove.to as Square;
+      setInternalLastMove({ from: fromSquare, to: toSquare });
+      highlightLastMove(fromSquare, toSquare);
+    }
+  }, [externalLastMove]);
+
   // Handle square click for click-to-move functionality
   const handleSquareClick = (square: Square) => {
     if (!isPlayerTurn) {
@@ -79,16 +91,26 @@ const ChessboardJS: React.FC<ChessboardJSProps> = ({ game, playerColor, isPlayer
       // If clicking on the same square, deselect it
       if (square === selectedSquare) {
         setSelectedSquare(null);
-        setOptionSquares({});
+        // Restore last move highlighting
+        if (internalLastMove) {
+          highlightLastMove(internalLastMove.from, internalLastMove.to);
+        } else {
+          setOptionSquares({});
+        }
         return;
       }
 
       // Try to make the move
       const moveResult = handlePieceDrop(selectedSquare, square);
       
-      // Clear selection regardless of move validity
+      // Clear selection
       setSelectedSquare(null);
-      setOptionSquares({});
+      
+      // If move was successful, the useEffect will handle highlighting
+      // If move failed, restore last move highlighting
+      if (!moveResult && internalLastMove) {
+        highlightLastMove(internalLastMove.from, internalLastMove.to);
+      }
     }
   };
 
@@ -98,6 +120,23 @@ const ChessboardJS: React.FC<ChessboardJSProps> = ({ game, playerColor, isPlayer
     
     // Highlight the selected square
     newOptionSquares[square] = { background: 'rgba(255, 217, 102, 0.7)' };
+    
+    // Keep highlighting the last move if it exists
+    if (internalLastMove) {
+      newOptionSquares[internalLastMove.from] = { background: 'rgba(173, 216, 230, 0.5)' };
+      newOptionSquares[internalLastMove.to] = { background: 'rgba(173, 216, 230, 0.5)' };
+    }
+    
+    setOptionSquares(newOptionSquares);
+  };
+
+  // Highlight the last move (source and destination squares)
+  const highlightLastMove = (fromSquare: Square, toSquare: Square) => {
+    const newOptionSquares: Record<string, { background: string }> = {};
+    
+    // Highlight source and destination squares
+    newOptionSquares[fromSquare] = { background: 'rgba(173, 216, 230, 0.5)' }; // Light blue
+    newOptionSquares[toSquare] = { background: 'rgba(173, 216, 230, 0.5)' };
     
     setOptionSquares(newOptionSquares);
   };
@@ -127,6 +166,11 @@ const ChessboardJS: React.FC<ChessboardJSProps> = ({ game, playerColor, isPlayer
 
       // If the move is valid, send it to the parent component
       console.log('Valid move:', move);
+      
+      // Update internal last move and highlight it
+      setInternalLastMove({ from: sourceSquare, to: targetSquare });
+      highlightLastMove(sourceSquare, targetSquare);
+      
       onMove({
         from: sourceSquare,
         to: targetSquare,
@@ -144,7 +188,6 @@ const ChessboardJS: React.FC<ChessboardJSProps> = ({ game, playerColor, isPlayer
     setIsDragging(true);
     // Clear any selected square when dragging starts
     setSelectedSquare(null);
-    setOptionSquares({});
   };
 
   const handlePieceDragEnd = () => {

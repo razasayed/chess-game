@@ -9,6 +9,7 @@ interface GameContextProps {
   isPlayerTurn: boolean;
   gameStatus: string;
   opponent: boolean;
+  lastMove: { from: string; to: string } | null;
   createGame: () => Promise<string>;
   joinGame: (id: string) => void;
   makeMove: (move: { from: string; to: string; promotion?: string }) => void;
@@ -28,6 +29,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children }) => {
   const [playerColor, setPlayerColor] = useState<'w' | 'b'>('w');
   const [opponent, setOpponent] = useState(false);
   const [gameStatus, setGameStatus] = useState('');
+  const [lastMove, setLastMove] = useState<{ from: string; to: string } | null>(null);
 
   useEffect(() => {
     // Initialize socket connection
@@ -64,15 +66,29 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children }) => {
       // Reset the game state first
       setGame(new Chess());
       setOpponent(false);
+      setLastMove(null);
       // Then set the new game ID
       setGameId(data.gameId);
       setPlayerColor('w');
       setGameStatus('Waiting for opponent...');
     });
 
-    socket.on('gameJoined', () => {
-      console.log('Game joined');
+    socket.on('gameJoined', (data: { gameId: string, fen?: string, lastMove?: { from: string; to: string } }) => {
+      console.log('Game joined:', data);
       setOpponent(true);
+      
+      // If FEN is provided, update the game state
+      if (data.fen) {
+        const newGame = new Chess(data.fen);
+        setGame(newGame);
+      }
+      
+      // If lastMove is provided, update it
+      if (data.lastMove) {
+        console.log('Setting last move from gameJoined:', data.lastMove);
+        setLastMove(data.lastMove);
+      }
+      
       setGameStatus('Game started. White to move.');
     });
 
@@ -82,10 +98,17 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children }) => {
       setGameStatus('Game started. White to move.');
     });
 
-    socket.on('moveMade', (data: { fen: string }) => {
+    socket.on('moveMade', (data: { fen: string, lastMove?: { from: string; to: string } }) => {
       console.log('Move made, new FEN:', data.fen);
       const newGame = new Chess(data.fen);
       setGame(newGame);
+      
+      // Update last move if provided
+      if (data.lastMove) {
+        console.log('Last move:', data.lastMove);
+        setLastMove(data.lastMove);
+      }
+      
       updateGameStatus(newGame);
     });
 
@@ -117,7 +140,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children }) => {
       socket.off('opponentDisconnected');
       socket.off('gameReset');
     };
-  }, [socket, gameId]);
+  }, [socket]);
 
   const updateGameStatus = (currentGame: Chess) => {
     if (currentGame.isGameOver()) {
@@ -233,6 +256,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children }) => {
     isPlayerTurn,
     gameStatus,
     opponent,
+    lastMove,
     createGame,
     joinGame,
     makeMove,
